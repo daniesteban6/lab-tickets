@@ -1,0 +1,65 @@
+# Laboratorio Semana 5 - version distribuida (cada pieza en su contenedor).
+#
+#   docker compose up --build              -> modo async (por defecto)
+#   MODO=sync docker compose up --build    -> modo sync (la API espera al notificador)
+#
+#   docker compose stop notificador        -> "se cayo" el servicio de correos
+#   docker compose start notificador       -> volvio
+#   docker compose logs -f notificador     -> ver los correos salir uno a uno
+#
+# Panel de RabbitMQ: http://localhost:15672  (usuario lab / clave lab)
+
+x-comun: &comun
+  build: .
+  environment: &env
+    MODO: ${MODO:-async}
+    BROKER: rabbit
+    RABBIT_URL: amqp://lab:lab@rabbitmq:5672
+    NOTIFICAR_MS: ${NOTIFICAR_MS:-2000}
+    IDEMPOTENTE: ${IDEMPOTENTE:-false}
+    PAGO_FALLA_PROB: ${PAGO_FALLA_PROB:-0}
+  depends_on:
+    rabbitmq:
+      condition: service_healthy
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: lab
+      RABBITMQ_DEFAULT_PASS: lab
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    <<: *comun
+    environment:
+      <<: *env
+      ROL: api
+      PUERTO: 3000
+      NOTIFICADOR_URL: http://notificador:3001
+      PROYECTOR_URL: http://proyector:3002
+    ports:
+      - "3000:3000"
+
+  notificador:
+    <<: *comun
+    environment:
+      <<: *env
+      ROL: notificador
+    ports:
+      - "3001:3001"
+
+  proyector:
+    <<: *comun
+    environment:
+      <<: *env
+      ROL: proyector
+    ports:
+      - "3002:3002"

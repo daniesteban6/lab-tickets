@@ -1,0 +1,17 @@
+{
+  "name": "lab-semana5-boleteria",
+  "version": "1.0.0",
+  "description": "Laboratorio Semana 5 - Arquitectura de Software (UFPS): sincrono vs. eventos, idempotencia, sagas y CQRS en una boleteria minima",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.js",
+    "carga": "node scripts/carga.js",
+    "test": "node --test test/"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "express": "^4.21.0"
+  }
+}
