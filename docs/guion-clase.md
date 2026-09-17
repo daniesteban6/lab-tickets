@@ -1,4 +1,4 @@
-# Semana 5 · Flujo y acoplamiento · Guion de la clase (laboratorio)
+# Flujo y acoplamiento · Guion de la clase (laboratorio)
 
 Arquitectura de Software · UFPS · 2026-II · 3 horas
 
@@ -119,11 +119,14 @@ Contar el escenario real: el notificador procesó el mensaje, envió el correo, 
 
 ```bash
 curl -X POST localhost:3000/admin/duplicar
+sleep 2                                    # el notificador tarda NOTIFICAR_MS en "enviar" el duplicado
 curl localhost:3001/estado                 # sin Docker: localhost:3000/admin/estado
 curl localhost:3000/reportes/ventas
 ```
 
-Resultado esperado: `comprasConCorreoDuplicado: 1`. El cliente recibió dos correos. Y algo peor que casi nadie ve venir: el reporte de ventas también contó la compra dos veces. Mostrar `reportes/ventas` y compararlo con `GET /eventos` (los cupos están bien, el reporte no). El duplicado no solo molesta, **corrompe datos**.
+⚠️ Ojo con el `sleep`: si se ejecutan los tres curls pegados sin pausa, `/estado` todavía no refleja el duplicado (el notificador sigue "enviando" el correo) y va a mostrar `comprasConCorreoDuplicado: 0`, lo cual confunde en vivo. `/reportes/ventas` sí puede llegar a mostrarlo antes, porque el proyector no tiene esa espera artificial.
+
+Resultado esperado (después del `sleep`): `comprasConCorreoDuplicado: 1`. El cliente recibió dos correos. Y algo peor que casi nadie ve venir: el reporte de ventas también contó la compra dos veces. Mostrar `reportes/ventas` y compararlo con `GET /eventos` (los cupos están bien, el reporte no). El duplicado no solo molesta, **corrompe datos**.
 
 Ahora con memoria:
 
@@ -153,7 +156,14 @@ En el tablero, dibujar la misma saga **coreografiada**: inventario publica "rese
 
 Pregunta difícil, para dejarla abierta: ¿y si la compensación falla? (Liberar cupos falló porque inventario se cayó.) Reintentar, con idempotencia, y si sigue fallando, una cola de "muertos" y una persona. No todo se resuelve con código.
 
-Con `PAGO_FALLA_PROB=0.3` y una carga de 40 se ve la saga en volumen: 12 rechazadas, cupos cuadrados.
+Para verlo en volumen:
+
+```bash
+PAGO_FALLA_PROB=0.3 docker compose up -d   # sin Docker: PAGO_FALLA_PROB=0.3 MODO=async npm start
+node scripts/carga.js 40 10
+```
+
+Con `PAGO_FALLA_PROB=0.3` y una carga de 40 se ve la saga en volumen: alrededor de 12 rechazadas, cupos cuadrados. (`carga.js` no manda `fallarPago`, así que aquí el que decide es el azar de la pasarela, no el flag por compra.)
 
 ## 1:45 · Acto 6 · El reporte que llega tarde
 
