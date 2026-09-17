@@ -1,7 +1,7 @@
 {
-  "name": "lab-semana5-boleteria",
+  "name": "lab-boleteria",
   "version": "1.0.0",
-  "description": "Laboratorio Semana 5 - Arquitectura de Software (UFPS): sincrono vs. eventos, idempotencia, sagas y CQRS en una boleteria minima",
+  "description": "Laboratorio de Arquitectura de Software (UFPS): sincrono vs. eventos, idempotencia, sagas y CQRS en una boleteria minima",
   "main": "src/main.js",
   "type": "module",
   "scripts": {

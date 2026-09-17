@@ -2,7 +2,7 @@
 // Pegar en https://structurizr.com/dsl y presionar "Render".
 // Es el punto de partida para la vista de contenedores de la E2.
 
-workspace "Boletería (laboratorio semana 5)" "Sistema mínimo para ver flujo y acoplamiento" {
+workspace "Boletería (laboratorio de arquitectura de software)" "Sistema mínimo para ver flujo y acoplamiento" {
 
     model {
         cliente = person "Cliente" "Compra boletas para eventos"

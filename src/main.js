@@ -63,7 +63,7 @@ if (esTodo || rol === 'api') {
 
   app.get('/', async (_req, res) => {
     res.json({
-      laboratorio: 'Semana 5 - flujo y acoplamiento',
+      laboratorio: 'Flujo y acoplamiento',
       config: describirConfig(),
       colas: broker?.estado() ?? 'sin broker (modo sync)',
       notificador: esTodo ? notificador.estado() : `ver ${config.notificadorUrl}/estado`,

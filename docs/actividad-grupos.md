@@ -1,4 +1,4 @@
-# Semana 5 · Actividad por grupos · Del flujo al patrón
+# Actividad por grupos · Del flujo al patrón
 
 Arquitectura de Software · UFPS · 2026-II
 Tiempo: 45 minutos en clase. Entrega: al final de la clase, en el repo del grupo.

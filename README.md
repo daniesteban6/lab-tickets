@@ -1,4 +1,4 @@
-# Laboratorio Semana 5 · Flujo y acoplamiento
+# Laboratorio de Flujo y Acoplamiento
 
 Arquitectura de Software · UFPS · 2026-II
 

@@ -1,4 +1,4 @@
-# Laboratorio Semana 5 - version distribuida (cada pieza en su contenedor).
+# Laboratorio de Arquitectura de Software - version distribuida (cada pieza en su contenedor).
 #
 #   docker compose up --build              -> modo async (por defecto)
 #   MODO=sync docker compose up --build    -> modo sync (la API espera al notificador)
