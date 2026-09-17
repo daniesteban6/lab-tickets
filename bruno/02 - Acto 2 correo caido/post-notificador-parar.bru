@@ -1,0 +1,15 @@
+meta {
+  name: POST /admin/notificador/parar (solo sin Docker)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/admin/notificador/parar
+  body: none
+  auth: none
+}
+
+docs {
+  Solo funciona con ROL=all (plan B sin Docker). Con Docker: docker compose stop notificador.
+}

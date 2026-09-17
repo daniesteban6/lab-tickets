@@ -1,0 +1,15 @@
+meta {
+  name: POST /admin/reset
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/admin/reset
+  body: none
+  auth: none
+}
+
+docs {
+  Vuelve todo al inicio: cupos, notificador y proyector (si ROL=all). Util antes de ensayar de nuevo.
+}

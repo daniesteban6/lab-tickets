@@ -1,0 +1,15 @@
+meta {
+  name: POST /admin/proyector/parar (solo sin Docker)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/admin/proyector/parar
+  body: none
+  auth: none
+}
+
+docs {
+  Con Docker: docker compose stop proyector.
+}

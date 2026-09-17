@@ -1,0 +1,27 @@
+meta {
+  name: POST /compras (fallarPago: true)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/compras
+  body: json
+  auth: none
+}
+
+headers {
+  content-type: application/json
+}
+
+body:json {
+  {
+    "eventoId": "teatro",
+    "cantidad": 3,
+    "fallarPago": true
+  }
+}
+
+docs {
+  Espera 402 "pago rechazado, reserva liberada". Revisar GET /eventos despues: los cupos de teatro deben quedar intactos.
+}

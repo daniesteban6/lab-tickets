@@ -1,0 +1,15 @@
+meta {
+  name: POST /admin/notificador/reanudar (solo sin Docker)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/admin/notificador/reanudar
+  body: none
+  auth: none
+}
+
+docs {
+  Con Docker: docker compose start notificador.
+}

@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "Boleteria - Guion de clase",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"]
+}

@@ -1,0 +1,16 @@
+meta {
+  name: POST /admin/duplicar
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/admin/duplicar
+  body: none
+  auth: none
+}
+
+docs {
+  Solo tiene sentido en MODO=async. Reentrega el ultimo evento publicado (simula el ack perdido).
+  Ojo: esperar ~2s antes de revisar el estado del notificador, tarda NOTIFICAR_MS en "enviar" el duplicado.
+}
