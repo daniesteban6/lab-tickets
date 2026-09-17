@@ -11,5 +11,6 @@ post {
 }
 
 docs {
-  Vuelve todo al inicio: cupos, notificador y proyector (si ROL=all). Util antes de ensayar de nuevo.
+  Vuelve los cupos y las compras al inicio (solo el estado de la API). El notificador y el proyector
+  viven en otro contenedor y no se resetean desde aqui: usa `docker compose restart notificador proyector`.
 }

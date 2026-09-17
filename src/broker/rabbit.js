@@ -1,5 +1,5 @@
-// Broker RabbitMQ: la misma interfaz que el de memoria, pero con un proceso
-// aparte que guarda los mensajes. Aqui "matar el notificador" es
+// Broker RabbitMQ: guarda los eventos en un proceso aparte (el contenedor
+// rabbitmq) hasta que un consumidor los procesa. "Matar el notificador" es
 // `docker compose stop notificador`, y la cola se ve crecer en
 // http://localhost:15672 (usuario lab / clave lab).
 
@@ -59,14 +59,6 @@ export function crearBrokerRabbit(url) {
         }
       });
       console.log(`[broker] consumiendo ${nombreCola} <- ${tema}`);
-    },
-
-    // Con RabbitMQ el consumidor se "mata" con docker compose, no desde aqui.
-    pausar() {
-      throw new Error('Con BROKER=rabbit usa: docker compose stop notificador');
-    },
-    reanudar() {
-      throw new Error('Con BROKER=rabbit usa: docker compose start notificador');
     },
 
     async duplicarUltimo() {

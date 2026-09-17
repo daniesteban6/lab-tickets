@@ -1,0 +1,15 @@
+meta {
+  name: GET notificador /estado (puerto 3001)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{notificadorUrl}}/estado
+  body: none
+  auth: none
+}
+
+docs {
+  El notificador corre en su propio contenedor: se consulta directo por su puerto, no vía la API.
+}

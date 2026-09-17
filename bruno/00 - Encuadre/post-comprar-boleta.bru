@@ -1,0 +1,26 @@
+meta {
+  name: POST /compras (comprar boleta)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/compras
+  body: json
+  auth: none
+}
+
+headers {
+  content-type: application/json
+}
+
+body:json {
+  {
+    "eventoId": "concierto",
+    "cantidad": 1
+  }
+}
+
+docs {
+  La compra base del laboratorio. Cambia eventoId a "teatro" o cantidad si quieres. Para forzar el rechazo del pago, agrega "fallarPago": true (ver esa variante en Acto 5).
+}

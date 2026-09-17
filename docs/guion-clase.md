@@ -14,8 +14,7 @@ Regla de la sesión: primero el escenario, después el patrón. Nunca se nombra 
 
 - [ ] Correr `docker compose up --build` en el portátil que se va a proyectar, con la red del salón, al menos un día antes. La imagen de RabbitMQ pesa unos 100 MB.
 - [ ] Verificar que abre http://localhost:15672 (lab / lab) y http://localhost:3000.
-- [ ] Tener listo el plan B sin Docker: `MODO=async npm start` en una terminal. Todo el guion funciona igual, solo cambia cómo se mata el notificador (endpoint en vez de `docker compose stop`).
-- [ ] Dos terminales grandes con letra legible: una para los comandos, otra con `docker compose logs -f notificador` (o el log del proceso).
+- [ ] Dos terminales grandes con letra legible: una para los comandos, otra con `docker compose logs -f notificador`.
 - [ ] Publicar en Moodle el repo (zip o enlace), la guía del bloque grupal (`docs/actividad-grupos.md`) y el enlace al simulador en el navegador (el artefacto "Simulador de flujo", compartido desde su menú), para los grupos que no tengan Docker.
 - [ ] Un grupo por caso ya sabe qué flujo va a modelar (ver tabla al final), para no perder 15 minutos eligiendo.
 
@@ -51,7 +50,7 @@ Explicar el generador de carga con una frase: manda N compras con C al tiempo y 
 ## 0:20 · Acto 1 · Llamar y esperar
 
 ```bash
-MODO=sync docker compose up --build      # o: MODO=sync npm start
+MODO=sync docker compose up --build
 node scripts/carga.js 40 10
 ```
 
@@ -66,7 +65,7 @@ Qué compra el modo sync: simplicidad, una sola pieza, y saber al responder que 
 ## 0:35 · Acto 2 · Se cayó el correo
 
 ```bash
-docker compose stop notificador          # o: curl -X POST localhost:3000/admin/notificador/parar
+docker compose stop notificador
 node scripts/carga.js 10 5
 ```
 
@@ -80,13 +79,13 @@ Dejar el notificador caído y pasar al acto 3 sin levantarlo. Sirve para el cont
 
 ```bash
 docker compose down
-docker compose up --build                # MODO=async por defecto; o: MODO=async npm start
+docker compose up --build                # MODO=async por defecto
 node scripts/carga.js 40 10
 ```
 
 Resultado esperado: 40 exitosas, p50 y p95 de decenas de milisegundos, duración total menor a un segundo. Mismo notificador de 2 segundos, misma cantidad de correos.
 
-Inmediatamente abrir el panel de RabbitMQ (http://localhost:15672, pestaña Queues): la cola `notificaciones` tiene decenas de mensajes y baja de a uno cada 2 segundos. En la terminal de logs se ven salir los correos. Sin Docker: `GET /admin/estado` muestra `pendientes`.
+Inmediatamente abrir el panel de RabbitMQ (http://localhost:15672, pestaña Queues and Streams): la cola `notificaciones` tiene decenas de mensajes y baja de a uno cada 2 segundos. En la terminal de logs se ven salir los correos.
 
 Ahora matar el notificador otra vez y cargar:
 
@@ -120,7 +119,7 @@ Contar el escenario real: el notificador procesó el mensaje, envió el correo, 
 ```bash
 curl -X POST localhost:3000/admin/duplicar
 sleep 2                                    # el notificador tarda NOTIFICAR_MS en "enviar" el duplicado
-curl localhost:3001/estado                 # sin Docker: localhost:3000/admin/estado
+curl localhost:3001/estado
 curl localhost:3000/reportes/ventas
 ```
 
@@ -131,7 +130,7 @@ Resultado esperado (después del `sleep`): `comprasConCorreoDuplicado: 1`. El cl
 Ahora con memoria:
 
 ```bash
-IDEMPOTENTE=true docker compose up -d      # sin Docker: IDEMPOTENTE=true MODO=async npm start
+IDEMPOTENTE=true docker compose up -d
 node scripts/carga.js 5 5
 curl -X POST localhost:3000/admin/duplicar
 ```
@@ -159,7 +158,7 @@ Pregunta difícil, para dejarla abierta: ¿y si la compensación falla? (Liberar
 Para verlo en volumen:
 
 ```bash
-PAGO_FALLA_PROB=0.3 docker compose up -d   # sin Docker: PAGO_FALLA_PROB=0.3 MODO=async npm start
+PAGO_FALLA_PROB=0.3 docker compose up -d
 node scripts/carga.js 40 10
 ```
 
@@ -177,7 +176,7 @@ Dos lecturas del mismo negocio. `/eventos` viene del modelo de escritura (los cu
 Romperlo:
 
 ```bash
-docker compose stop proyector              # sin Docker: POST /admin/proyector/parar
+docker compose stop proyector
 node scripts/carga.js 10 5
 curl localhost:3000/reportes/ventas        # no cambió
 curl localhost:3000/eventos                # sí cambió
@@ -231,7 +230,6 @@ Previo: los mecanismos de hoy (disponibilidad encadenada, timeout → reintento 
 
 ## Si algo sale mal
 
-- Docker no levanta: `MODO=async npm start` y seguir el guion con los endpoints `/admin`. Se pierde el panel de RabbitMQ; `GET /admin/estado` lo reemplaza.
-- El puerto 3000 está ocupado: `PUERTO=3005 npm start` y `node scripts/carga.js 40 10 http://localhost:3005`.
+- El puerto 3000 (u otro) está ocupado: cambiar el mapeo en `docker-compose.yml` (por ejemplo `"3005:3000"` en el servicio `api`), `docker compose up --build` de nuevo, y `node scripts/carga.js 40 10 http://localhost:3005`.
 - La red del salón bloquea Docker Hub: por eso el checklist pide bajar las imágenes un día antes; una vez descargadas no se necesita red.
 - Los números no dan como en el guion: da igual, lo importante es la diferencia entre modos, no el valor exacto. Decirlo en voz alta; es una buena lección sobre medir.

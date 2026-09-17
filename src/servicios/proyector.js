@@ -27,8 +27,3 @@ export async function proyectar(evento) {
 export function reporteVentas() {
   return [...ventasPorEvento.values()];
 }
-
-export function reset() {
-  ventasPorEvento.clear();
-  yaContadas.clear();
-}

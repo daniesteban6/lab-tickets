@@ -1,8 +1,7 @@
-// Punto de entrada. Un solo codigo, varios roles:
-//   ROL=all          todo en un proceso (sin Docker)         -> http://localhost:3000
-//   ROL=api          solo la API HTTP                        -> :3000
-//   ROL=notificador  solo el servicio de correos             -> :3001
-//   ROL=proyector    solo el modelo de lectura (CQRS)        -> :3002
+// Punto de entrada. Cada contenedor corre uno de estos roles:
+//   ROL=api          la API HTTP                        -> :3000
+//   ROL=notificador  el servicio de correos              -> :3001
+//   ROL=proyector    el modelo de lectura (CQRS)         -> :3002
 
 import express from 'express';
 import { config, describirConfig } from './config.js';
@@ -13,18 +12,17 @@ import * as proyector from './servicios/proyector.js';
 import { crearCasoDeUsoCompra } from './servicios/compra.js';
 
 const rol = config.rol;
-const esTodo = rol === 'all';
 const app = express();
 app.use(express.json());
 
-const broker = config.modo === 'async' || esTodo ? await crearBroker() : null;
+const broker = config.modo === 'async' ? await crearBroker() : null;
 
 // ---------- Consumidores (workers) ----------
-if (esTodo || rol === 'notificador') {
+if (rol === 'notificador') {
   if (config.modo === 'async') {
     await broker.suscribir(COLAS.NOTIFICACIONES, TEMAS.BOLETA_COMPRADA, notificador.enviar);
   }
-  // Endpoint para el modo sync con Docker (la API lo llama por HTTP)
+  // Endpoint para el modo sync (la API lo llama por HTTP)
   app.post('/notificar', async (req, res) => {
     try {
       const r = await notificador.enviar(req.body);
@@ -36,7 +34,7 @@ if (esTodo || rol === 'notificador') {
   app.get('/estado', (_req, res) => res.json(notificador.estado()));
 }
 
-if (esTodo || rol === 'proyector') {
+if (rol === 'proyector') {
   if (config.modo === 'async') {
     await broker.suscribir(COLAS.PROYECCIONES, TEMAS.BOLETA_COMPRADA, proyector.proyectar);
   }
@@ -44,20 +42,17 @@ if (esTodo || rol === 'proyector') {
 }
 
 // ---------- API ----------
-if (esTodo || rol === 'api') {
-  // Como llamar al notificador en modo sync: local (all) o por HTTP (Docker)
-  const notificar = esTodo
-    ? notificador.enviar
-    : async (evento) => {
-        const r = await fetch(`${config.notificadorUrl}/notificar`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(evento),
-          signal: AbortSignal.timeout(10_000),
-        });
-        if (!r.ok) throw new Error(`notificador respondio ${r.status}`);
-        return r.json();
-      };
+if (rol === 'api') {
+  const notificar = async (evento) => {
+    const r = await fetch(`${config.notificadorUrl}/notificar`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(evento),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!r.ok) throw new Error(`notificador respondio ${r.status}`);
+    return r.json();
+  };
 
   const comprar = crearCasoDeUsoCompra({ broker, notificar });
 
@@ -66,7 +61,7 @@ if (esTodo || rol === 'api') {
       laboratorio: 'Flujo y acoplamiento',
       config: describirConfig(),
       colas: broker?.estado() ?? 'sin broker (modo sync)',
-      notificador: esTodo ? notificador.estado() : `ver ${config.notificadorUrl}/estado`,
+      notificador: `ver ${config.notificadorUrl}/estado`,
       eventos: boleteria.resumenEventos(),
     });
   });
@@ -83,47 +78,18 @@ if (esTodo || rol === 'api') {
     }
   });
 
-  if (!esTodo) {
-    // En Docker el reporte vive en otro proceso: la API solo lo reenvia.
-    app.get('/reportes/ventas', async (_req, res) => {
-      try {
-        const r = await fetch(`${process.env.PROYECTOR_URL ?? 'http://localhost:3002'}/reportes/ventas`);
-        res.json(await r.json());
-      } catch (err) {
-        res.status(503).json({ error: `proyector no responde: ${err.message}` });
-      }
-    });
-  }
+  // El reporte vive en el proyector, en otro contenedor: la API solo lo reenvia.
+  app.get('/reportes/ventas', async (_req, res) => {
+    try {
+      const r = await fetch(`${process.env.PROYECTOR_URL ?? 'http://localhost:3002'}/reportes/ventas`);
+      res.json(await r.json());
+    } catch (err) {
+      res.status(503).json({ error: `proyector no responde: ${err.message}` });
+    }
+  });
 
   // ---------- Perillas de clase ----------
-  app.get('/admin/estado', (_req, res) =>
-    res.json({ config: describirConfig(), colas: broker?.estado() ?? null, notificador: esTodo ? notificador.estado() : null }),
-  );
-
-  app.post('/admin/notificador/parar', (_req, res) => {
-    if (!esTodo) return res.status(400).json({ error: 'con Docker usa: docker compose stop notificador' });
-    notificador.parar();
-    if (config.modo === 'async') broker.pausar(COLAS.NOTIFICACIONES);
-    res.json({ ok: true, mensaje: 'notificador caido' });
-  });
-
-  app.post('/admin/notificador/reanudar', (_req, res) => {
-    if (!esTodo) return res.status(400).json({ error: 'con Docker usa: docker compose start notificador' });
-    notificador.reanudar();
-    if (config.modo === 'async') broker.reanudar(COLAS.NOTIFICACIONES);
-    res.json({ ok: true, mensaje: 'notificador de vuelta' });
-  });
-
-  app.post('/admin/proyector/parar', (_req, res) => {
-    if (!esTodo) return res.status(400).json({ error: 'con Docker usa: docker compose stop proyector' });
-    broker.pausar(COLAS.PROYECCIONES);
-    res.json({ ok: true });
-  });
-  app.post('/admin/proyector/reanudar', (_req, res) => {
-    if (!esTodo) return res.status(400).json({ error: 'con Docker usa: docker compose start proyector' });
-    broker.reanudar(COLAS.PROYECCIONES);
-    res.json({ ok: true });
-  });
+  app.get('/admin/estado', (_req, res) => res.json({ config: describirConfig(), colas: broker?.estado() ?? null }));
 
   // Entrega duplicada: el broker vuelve a entregar el ultimo evento.
   app.post('/admin/duplicar', async (_req, res) => {
@@ -134,15 +100,11 @@ if (esTodo || rol === 'api') {
 
   app.post('/admin/reset', (_req, res) => {
     boleteria.sembrar();
-    if (esTodo) {
-      notificador.reset();
-      proyector.reset();
-    }
     res.json({ ok: true });
   });
 }
 
-const puerto = esTodo || rol === 'api' ? config.puerto : rol === 'notificador' ? 3001 : 3002;
+const puerto = rol === 'api' ? config.puerto : rol === 'notificador' ? 3001 : 3002;
 app.listen(puerto, () => {
   console.log(`[${rol}] escuchando en :${puerto}`, describirConfig());
 });

@@ -13,7 +13,6 @@ x-comun: &comun
   build: .
   environment: &env
     MODO: ${MODO:-async}
-    BROKER: rabbit
     RABBIT_URL: amqp://lab:lab@rabbitmq:5672
     NOTIFICAR_MS: ${NOTIFICAR_MS:-2000}
     IDEMPOTENTE: ${IDEMPOTENTE:-false}

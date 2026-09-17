@@ -1,11 +1,10 @@
 import { config } from '../config.js';
-import { crearBrokerMemoria } from './memoria.js';
 import { crearBrokerRabbit } from './rabbit.js';
 
 // Un puerto (en el sentido hexagonal): la API y los workers hablan con
-// "un broker", y aqui se decide cual adaptador se conecta.
+// "un broker" sin conocer amqplib directamente.
 export async function crearBroker() {
-  const broker = config.broker === 'rabbit' ? crearBrokerRabbit(config.rabbitUrl) : crearBrokerMemoria();
+  const broker = crearBrokerRabbit(config.rabbitUrl);
   await broker.conectar();
   return broker;
 }

@@ -5,18 +5,16 @@
 const env = (nombre, porDefecto) => process.env[nombre] ?? porDefecto;
 
 export const config = {
-  // Que hace este proceso: 'all' (todo en uno, sin Docker), 'api', 'notificador' o 'proyector'
-  rol: env('ROL', 'all'),
+  // Que hace este proceso: 'api', 'notificador' o 'proyector' (un contenedor por rol)
+  rol: env('ROL', 'api'),
 
   // 'sync': la API llama al notificador y espera.  'async': la API publica un evento y responde.
   modo: env('MODO', 'sync'),
 
-  // 'memory': cola en el mismo proceso (solo con ROL=all).  'rabbit': RabbitMQ real.
-  broker: env('BROKER', 'memory'),
   rabbitUrl: env('RABBIT_URL', 'amqp://lab:lab@localhost:5672'),
 
   puerto: Number(env('PUERTO', 3000)),
-  // Solo en modo sync con Docker: donde vive el notificador
+  // Donde vive el notificador: la API lo llama por HTTP en modo sync
   notificadorUrl: env('NOTIFICADOR_URL', 'http://localhost:3001'),
 
   // Cuanto tarda "enviar un correo" (el servicio lento del cuento)
@@ -33,7 +31,7 @@ export function describirConfig() {
   return {
     rol: config.rol,
     modo: config.modo,
-    broker: config.broker,
+    broker: 'rabbit',
     notificarMs: config.notificarMs,
     idempotente: config.idempotente,
     pagoFallaProb: config.pagoFallaProb,
